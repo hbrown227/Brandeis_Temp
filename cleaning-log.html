@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Brandeis Light Microscopy — Cleaning Log</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:         #003478;
+  --gold:         #C8A951;
+  --blue-lt:      #e8edf5;
+  --gold-lt:      #fdf7e8;
+  --bg:           #f4f6fb;
+  --surface:      #ffffff;
+  --border:       #dde3ef;
+  --border-strong:#c4cede;
+  --text:         #1a1a1a;
+  --muted:        #6b7280;
+  --light:        #b0b8c8;
+  --ok:           #2e7d32;
+  --ok-bg:        #e8f5e9;
+  --ok-mid:       #81c784;
+  --warn:         #e65100;
+  --warn-bg:      #fff3e0;
+  --danger:       #b71c1c;
+  --danger-bg:    #fdecea;
+  --radius:       10px;
+  --shadow:       0 1px 4px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+}
+
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+
+/* ── Header ── */
+header {
+  background: var(--blue);
+  border-bottom: 3px solid var(--gold);
+  padding: 0 1.25rem;
+  display: flex; align-items: stretch; justify-content: space-between; gap: 8px;
+  position: sticky; top: 0; z-index: 50;
+}
+.header-brand { display: flex; align-items: center; gap: 12px; padding: .85rem 0; }
+.header-logo {
+  width: 36px; height: 36px; border-radius: 6px;
+  background: var(--gold); display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 800; color: var(--blue); flex-shrink: 0;
+}
+.header-title { color: #fff; font-size: 15px; font-weight: 600; line-height: 1.2; }
+.header-sub   { color: rgba(255,255,255,.6); font-size: 11px; margin-top: 1px; }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.admin-badge {
+  display: none; font-size: 11px; color: var(--gold); font-weight: 600;
+  background: rgba(200,169,81,.15); padding: 3px 9px; border-radius: 20px;
+  border: 1px solid rgba(200,169,81,.3);
+}
+.btn-lock { display: none; }
+
+/* ── Layout ── */
+main { max-width: 680px; margin: 0 auto; padding: 1.1rem 1rem 4rem; }
+
+/* ── Tabs ── */
+.tab-bar { display: flex; gap: 4px; margin-bottom: 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px; }
+.tab { flex: 1; padding: 7px 10px; border-radius: 7px; border: none; background: transparent; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--muted); transition: all .15s; text-align: center; }
+.tab.active { background: var(--blue); color: #fff; }
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── Cards ── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; margin-bottom: 10px; box-shadow: var(--shadow); }
+
+/* ── Metrics ── */
+.metric-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+.metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: .85rem; text-align: center; box-shadow: var(--shadow); }
+.metric-val { font-size: 26px; font-weight: 700; line-height: 1; }
+.metric-lbl { font-size: 10px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
+
+/* ── Form ── */
+.form-group { margin-bottom: .85rem; }
+label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
+input, select, textarea { width: 100%; font-size: 14px; font-family: inherit; padding: 9px 11px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg); color: var(--text); outline: none; transition: border-color .15s, background .15s; }
+input:focus, select:focus, textarea:focus { border-color: var(--blue); background: #fff; }
+textarea { resize: vertical; min-height: 80px; }
+.divider { height: 1px; background: var(--border); margin: 1rem 0; }
+
+/* ── Checklist ── */
+.checklist { display: flex; flex-direction: column; gap: 6px; }
+.check-item { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; transition: all .15s; user-select: none; }
+.check-item.checked { border-color: var(--ok-mid); background: var(--ok-bg); }
+.check-item input[type="checkbox"] { display: none; }
+.check-box { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--border-strong); background: #fff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.check-item.checked .check-box { background: var(--ok); border-color: var(--ok); }
+.check-box::after { content: '✓'; color: #fff; font-size: 11px; font-weight: 700; opacity: 0; transition: opacity .1s; }
+.check-item.checked .check-box::after { opacity: 1; }
+.check-label { font-size: 13px; font-weight: 500; }
+.checklist-placeholder { font-size: 13px; color: var(--muted); padding: 10px 0; }
+
+/* ── Buttons ── */
+.btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-strong); font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; color: var(--text); background: var(--surface); transition: background .15s; }
+.btn:hover { background: var(--bg); }
+.btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); width: 100%; padding: 12px; font-size: 14px; margin-top: 4px; }
+.btn-primary:hover { background: #002460; }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-danger { border-color: var(--danger); color: var(--danger); }
+.btn-danger:hover { background: var(--danger-bg); }
+
+/* ── Log entries ── */
+.log-entry { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; margin-bottom: 10px; box-shadow: var(--shadow); }
+.log-scope { font-size: 15px; font-weight: 600; }
+.log-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.log-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+.badge-full    { background: var(--ok-bg);   color: var(--ok); }
+.badge-partial { background: var(--warn-bg); color: var(--warn); }
+.badge-none    { background: #f0f0f0;         color: var(--muted); }
+.checklist-summary { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.chip { padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.chip-done { background: var(--ok-bg);   color: var(--ok); }
+.chip-skip { background: #f0f0f0; color: var(--muted); text-decoration: line-through; }
+.log-notes { font-size: 13px; color: #555; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); line-height: 1.55; }
+
+/* ── PIN / Admin ── */
+.pin-screen { text-align: center; padding: 2.5rem 1rem; }
+.pin-input { text-align: center; font-size: 28px; letter-spacing: .4em; width: 160px; margin: 0 auto 1rem; display: block; border-radius: 10px; }
+.pin-error { color: var(--danger); font-size: 13px; margin-bottom: .75rem; display: none; }
+.admin-section-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+/* ── Scope admin cards ── */
+.scope-admin-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; box-shadow: var(--shadow); overflow: hidden; }
+.scope-admin-header { display: flex; align-items: center; justify-content: space-between; padding: .85rem 1rem; background: var(--blue-lt); border-bottom: 1px solid var(--border); gap: 8px; }
+.scope-admin-name { font-size: 14px; font-weight: 600; color: var(--blue); }
+.scope-admin-room { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.scope-admin-body { padding: .75rem 1rem; }
+.scope-check-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.scope-check-item:last-child { border-bottom: none; }
+.scope-check-name { flex: 1; font-size: 13px; }
+.add-item-row { display: flex; gap: 6px; margin-top: 8px; }
+.add-item-row input { flex: 1; font-size: 13px; padding: 7px 10px; }
+
+/* ── Filter bar ── */
+.filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+.filter-bar select { width: auto; font-size: 12px; padding: 5px 9px; }
+
+/* ── Misc ── */
+.empty { text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: 13px; }
+.no-items-hint { font-size: 12px; color: var(--muted); padding: 6px 0; font-style: italic; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #ddd; border-top-color: var(--blue); border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--blue); color: #fff; padding: 10px 20px; border-radius: 24px; font-size: 13px; font-weight: 500; z-index: 999; transition: transform .3s ease; pointer-events: none; white-space: nowrap; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── Footer ── */
+footer { text-align: center; padding: 2rem 1rem; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 1rem; }
+footer a { color: var(--blue); text-decoration: none; font-weight: 500; }
+footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <div class="header-logo">B</div>
+    <div>
+      <div class="header-title">Light Microscopy Core Facility</div>
+      <div class="header-sub">Brandeis University · Cleaning Log</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="admin-badge" id="admin-badge">ADMIN</span>
+    <button class="btn btn-sm btn-lock" id="lock-btn" onclick="lockAdmin()" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.25)">Lock</button>
+  </div>
+</header>
+
+<main>
+  <div class="tab-bar">
+    <button class="tab active" id="tab-log"     onclick="switchTab('log')">Log Cleaning</button>
+    <button class="tab"        id="tab-history" onclick="switchTab('history')">History</button>
+    <button class="tab"        id="tab-admin"   onclick="switchTab('admin')">Admin</button>
+  </div>
+
+  <!-- ── Log Cleaning ── -->
+  <div class="section active" id="section-log">
+    <div class="card">
+      <div class="form-group">
+        <label>Instrument</label>
+        <select id="log-scope" onchange="onScopeChange()">
+          <option value="">— Select instrument —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Cleaned by</label>
+        <input type="text" id="log-cleaner" placeholder="Your name">
+      </div>
+      <div class="form-group">
+        <label>Date &amp; Time</label>
+        <input type="datetime-local" id="log-datetime">
+      </div>
+      <div class="divider"></div>
+      <div class="form-group" id="checklist-section">
+        <label>Cleaning Checklist</label>
+        <div id="checklist-hint" class="checklist-placeholder">Select an instrument to load its checklist.</div>
+        <div class="checklist" id="log-checklist"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="form-group">
+        <label>Notes / Comments</label>
+        <textarea id="log-notes" placeholder="Any observations, issues, or additional details…"></textarea>
+      </div>
+      <button class="btn btn-primary" id="submit-btn" onclick="submitLog()">Submit Cleaning Log</button>
+    </div>
+  </div>
+
+  <!-- ── History ── -->
+  <div class="section" id="section-history">
+    <div class="metric-row">
+      <div class="metric"><div class="metric-val" id="m-total">—</div><div class="metric-lbl">Total Logs</div></div>
+      <div class="metric"><div class="metric-val" id="m-week">—</div><div class="metric-lbl">This Week</div></div>
+      <div class="metric"><div class="metric-val" id="m-scopes">—</div><div class="metric-lbl">Instruments</div></div>
+    </div>
+    <div class="filter-bar">
+      <select id="filter-scope" onchange="renderHistory()" style="flex:1;min-width:140px">
+        <option value="all">All instruments</option>
+      </select>
+      <select id="filter-period" onchange="renderHistory()">
+        <option value="all">All time</option>
+        <option value="7">Last 7 days</option>
+        <option value="30">Last 30 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+    </div>
+    <div id="history-list"><div class="empty"><span class="spinner"></span> Loading…</div></div>
+  </div>
+
+  <!-- ── Admin ── -->
+  <div class="section" id="section-admin">
+    <div id="pin-screen" class="card pin-screen">
+      <div style="font-size:36px;margin-bottom:1rem">🔒</div>
+      <div style="font-size:16px;font-weight:600;margin-bottom:.4rem">Admin access</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1.5rem">Enter your PIN to manage instruments and their checklists.</p>
+      <input class="pin-input" type="password" inputmode="numeric" maxlength="6" id="pin-input" placeholder="••••" onkeydown="if(event.key==='Enter')checkPin()">
+      <div class="pin-error" id="pin-error">Incorrect PIN. Try again.</div>
+      <button class="btn btn-primary" style="max-width:200px;margin:0 auto" onclick="checkPin()">Unlock</button>
+    </div>
+
+    <div id="admin-panel" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <div class="admin-section-title">Instruments &amp; Checklists</div>
+        <button class="btn btn-sm" onclick="showAddScope()">+ Add Instrument</button>
+      </div>
+
+      <div id="add-scope-form" class="card" style="display:none;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:.75rem">New Instrument</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input type="text" id="new-scope-name" placeholder="Instrument name" style="flex:1;min-width:140px">
+          <input type="text" id="new-scope-room" placeholder="Category / location" style="flex:1;min-width:120px">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-primary" style="margin-top:0" onclick="addScope()">Add Instrument</button>
+          <button class="btn" onclick="hideAddScope()">Cancel</button>
+        </div>
+      </div>
+
+      <div id="scope-admin-list"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <a href="https://www.brandeis.edu/science/core-research-facilities/light-microscopy/index.html">← Back to home</a>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Supabase config ───────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_KEY = 'YOUR_ANON_KEY';
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ADMIN_PIN = '2010';   // change this
+
+// Seed data — used only if the database has no instruments yet (first run).
+const SEED_SCOPES = [
+  { id: 'sc-falkor',     name: '"Falkor" — Zeiss LSM980 Airyscan2 with NIR Detector', room: 'Point Scanning Confocals' },
+  { id: 'sc-dagahra',   name: '"Dagahra" — Nikon AXR',                                room: 'Point Scanning Confocals' },
+  { id: 'sc-charizard', name: '"Charizard" — Abberior Facility Line 3D STED',         room: 'Point Scanning Confocals' },
+  { id: 'sc-lsm880as',  name: 'Zeiss LSM880 Airyscan',                                room: 'Point Scanning Confocals' },
+  { id: 'sc-lsm880',    name: 'Zeiss LSM880',                                         room: 'Point Scanning Confocals' },
+  { id: 'sc-godzilla',  name: '"Godzilla" — Andor Dragonfly 620SR',                   room: 'Spinning Disk Confocals' },
+  { id: 'sc-trogdor',   name: '"Trogdor" — Andor 2-Camera Spinning Disk',             room: 'Spinning Disk Confocals' },
+  { id: 'sc-jabberwocky',name:'"Jabberwocky" — Andor/Nikon 2-Camera Spinning Disk',  room: 'Spinning Disk Confocals' },
+  { id: 'sc-toothless', name: '"Toothless" — LifeCanvas Technologies SmartSPIM',      room: 'Lightsheet' },
+  { id: 'sc-keyence',   name: 'Keyence BZX710',                                       room: 'Widefield' },
+  { id: 'sc-puff',      name: '"Puff" — Leica M165FC Fluorescence Stereoscope',       room: 'Widefield' },
+  { id: 'sc-bnc2p',     name: 'BNC NeuroLabware Resonant Scanning 2-Photon',          room: '2-Photon' },
+  { id: 'sc-s102p',     name: 'S10 NeuroLabware Resonant Scanning 2-Photon',          room: '2-Photon' },
+  { id: 'sc-sarlacc',   name: '"Sarlacc" — LifeCanvas Technologies SmartBatch',       room: 'Sample Preparation' },
+];
+
+let adminUnlocked = false;
+let scopes = [];
+let logs   = [];
+
+// ── Supabase helper ───────────────────────────────────────────────────────────
+async function sb(path, opts = {}) {
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'Content-Type': 'application/json',
+    ...(opts.prefer ? { 'Prefer': opts.prefer } : {})
+  };
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    method: opts.method || 'GET',
+    headers,
+    body: opts.body || undefined
+  });
+  if (opts.prefer === 'return=minimal') return null;
+  if (!res.ok) { console.error(await res.text()); return null; }
+  return res.json();
+}
+
+// ── Seed fresh DB ─────────────────────────────────────────────────────────────
+async function seedIfEmpty() {
+  const existing = await sb('cleaning_scopes?select=id&limit=1');
+  if (existing && existing.length > 0) return;
+  for (const s of SEED_SCOPES) {
+    await sb('cleaning_scopes', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify(s) });
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  setDefaultDatetime();
+  await seedIfEmpty();
+  await Promise.all([loadScopes(), loadLogs()]);
+  renderLogForm();
+  renderHistory();
+}
+
+function setDefaultDatetime() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('log-datetime').value = now.toISOString().slice(0, 16);
+}
+
+// ── Load ──────────────────────────────────────────────────────────────────────
+async function loadScopes() {
+  const [scopeData, itemData] = await Promise.all([
+    sb('cleaning_scopes?order=name.asc'),
+    sb('scope_check_items?order=sort_order.asc,name.asc')
+  ]);
+  const items = itemData || [];
+  scopes = (scopeData || []).map(s => ({
+    ...s,
+    checkItems: items.filter(i => i.scope_id === s.id)
+  }));
+}
+
+async function loadLogs() {
+  const data = await sb('cleaning_logs?order=cleaned_at.desc&limit=200');
+  logs = data || [];
+}
+
+// ── Log form ──────────────────────────────────────────────────────────────────
+function renderLogForm() {
+  const sel = document.getElementById('log-scope');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Select instrument —</option>';
+
+  // Group by room (category)
+  const groups = {};
+  for (const s of scopes) {
+    const g = s.room || 'Other';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(s);
+  }
+  for (const [group, items] of Object.entries(groups)) {
+    const og = document.createElement('optgroup');
+    og.label = group;
+    for (const s of items) {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name;
+      og.appendChild(opt);
+    }
+    sel.appendChild(og);
+  }
+  sel.value = cur;
+  if (cur) loadChecklistForScope(cur);
+}
+
+function onScopeChange() {
+  loadChecklistForScope(document.getElementById('log-scope').value);
+}
+
+function loadChecklistForScope(scopeId) {
+  const hint = document.getElementById('checklist-hint');
+  const clEl = document.getElementById('log-checklist');
+  if (!scopeId) {
+    hint.textContent = 'Select an instrument to load its checklist.';
+    hint.style.display = 'block';
+    clEl.innerHTML = '';
+    return;
+  }
+  const scope = scopes.find(s => s.id === scopeId);
+  if (!scope || !scope.checkItems.length) {
+    hint.textContent = 'No checklist items for this instrument yet — add them in Admin.';
+    hint.style.display = 'block';
+    clEl.innerHTML = '';
+    return;
+  }
+  hint.style.display = 'none';
+  clEl.innerHTML = scope.checkItems.map(item => `
+    <label class="check-item" id="ci-${item.id}" onclick="toggleCheck('${item.id}')">
+      <input type="checkbox" id="chk-${item.id}">
+      <div class="check-box"></div>
+      <span class="check-label">${item.name}</span>
+    </label>
+  `).join('');
+}
+
+function toggleCheck(id) {
+  const el  = document.getElementById(`ci-${id}`);
+  const chk = document.getElementById(`chk-${id}`);
+  chk.checked = !chk.checked;
+  el.classList.toggle('checked', chk.checked);
+}
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+async function submitLog() {
+  const scope_id = document.getElementById('log-scope').value;
+  const cleaner  = document.getElementById('log-cleaner').value.trim();
+  const datetime = document.getElementById('log-datetime').value;
+  const notes    = document.getElementById('log-notes').value.trim();
+
+  if (!scope_id) { showToast('Please select an instrument'); return; }
+  if (!cleaner)  { showToast('Please enter your name'); return; }
+  if (!datetime) { showToast('Please set date & time'); return; }
+
+  const scope = scopes.find(s => s.id === scope_id);
+  const checked_items = (scope?.checkItems || [])
+    .filter(item => document.getElementById(`chk-${item.id}`)?.checked)
+    .map(item => item.id);
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Saving…';
+
+  const payload = {
+    id: 'cl-' + Date.now(),
+    scope_id,
+    cleaner,
+    cleaned_at: new Date(datetime).toISOString(),
+    checked_items,
+    notes: notes || null
+  };
+  await sb('cleaning_logs', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify(payload) });
+  logs.unshift(payload);
+
+  btn.disabled = false;
+  btn.textContent = 'Submit Cleaning Log';
+  showToast('✓ Cleaning log saved!');
+
+  document.getElementById('log-scope').value   = '';
+  document.getElementById('log-cleaner').value = '';
+  document.getElementById('log-notes').value   = '';
+  setDefaultDatetime();
+  loadChecklistForScope('');
+  renderHistory();
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+function renderHistory() {
+  const filterScope  = document.getElementById('filter-scope').value;
+  const filterPeriod = document.getElementById('filter-period').value;
+
+  // Rebuild filter dropdown
+  const sel = document.getElementById('filter-scope');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="all">All instruments</option>';
+  for (const s of scopes) {
+    const opt = document.createElement('option');
+    opt.value = s.id; opt.textContent = s.name;
+    sel.appendChild(opt);
+  }
+  sel.value = cur;
+
+  let list = [...logs];
+  if (filterScope !== 'all') list = list.filter(l => l.scope_id === filterScope);
+  if (filterPeriod !== 'all') {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - parseInt(filterPeriod));
+    list = list.filter(l => new Date(l.cleaned_at) >= cutoff);
+  }
+
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+  document.getElementById('m-total').textContent  = logs.length;
+  document.getElementById('m-week').textContent   = logs.filter(l => new Date(l.cleaned_at) >= weekAgo).length;
+  document.getElementById('m-scopes').textContent = scopes.length;
+
+  const el = document.getElementById('history-list');
+  if (!list.length) { el.innerHTML = '<div class="empty">No cleaning logs found.</div>'; return; }
+
+  el.innerHTML = list.map(log => {
+    const scope      = scopes.find(s => s.id === log.scope_id);
+    const scopeItems = scope?.checkItems || [];
+    const checked    = log.checked_items || [];
+    const total      = scopeItems.length;
+    const date       = new Date(log.cleaned_at).toLocaleDateString(undefined, {
+      weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    let badgeCls = 'badge-none', badgeTxt = 'No checklist';
+    if (total > 0) {
+      const isFull = checked.length === total;
+      badgeCls = isFull ? 'badge-full' : 'badge-partial';
+      badgeTxt = isFull ? '✓ Full clean' : `${checked.length}/${total} items`;
+    }
+
+    const chips = scopeItems.map(item => {
+      const done = checked.includes(item.id);
+      return `<span class="chip ${done ? 'chip-done' : 'chip-skip'}">${item.name}</span>`;
+    }).join('');
+
+    return `<div class="log-entry">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div>
+          <div class="log-scope">${scope ? scope.name : 'Unknown instrument'}</div>
+          <div class="log-meta">${date} · ${log.cleaner}${scope?.room ? ' · ' + scope.room : ''}</div>
+        </div>
+        <span class="log-badge ${badgeCls}">${badgeTxt}</span>
+      </div>
+      ${chips ? `<div class="checklist-summary">${chips}</div>` : ''}
+      ${log.notes ? `<div class="log-notes">${log.notes}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+function checkPin() {
+  if (document.getElementById('pin-input').value.trim() === ADMIN_PIN) {
+    adminUnlocked = true;
+    document.getElementById('pin-screen').style.display   = 'none';
+    document.getElementById('admin-panel').style.display  = 'block';
+    document.getElementById('pin-error').style.display    = 'none';
+    document.getElementById('pin-input').value            = '';
+    document.getElementById('admin-badge').style.display  = 'inline-flex';
+    document.getElementById('lock-btn').style.display     = 'inline-block';
+    renderAdminPanel();
+  } else {
+    document.getElementById('pin-error').style.display = 'block';
+    document.getElementById('pin-input').value         = '';
+  }
+}
+
+function lockAdmin() {
+  adminUnlocked = false;
+  document.getElementById('pin-screen').style.display  = 'block';
+  document.getElementById('admin-panel').style.display = 'none';
+  document.getElementById('admin-badge').style.display = 'none';
+  document.getElementById('lock-btn').style.display    = 'none';
+}
+
+function renderAdminPanel() {
+  const el = document.getElementById('scope-admin-list');
+  if (!scopes.length) {
+    el.innerHTML = '<div class="empty">No instruments yet. Add one above.</div>';
+    return;
+  }
+  el.innerHTML = scopes.map(s => `
+    <div class="scope-admin-card">
+      <div class="scope-admin-header">
+        <div>
+          <div class="scope-admin-name">${s.name}</div>
+          ${s.room ? `<div class="scope-admin-room">${s.room}</div>` : ''}
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="deleteScope('${s.id}')">Remove</button>
+      </div>
+      <div class="scope-admin-body">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Checklist Items</div>
+        <div id="items-${s.id}">
+          ${s.checkItems.length
+            ? s.checkItems.map(item => `
+                <div class="scope-check-item">
+                  <span class="scope-check-name">${item.name}</span>
+                  <button class="btn btn-sm btn-danger" onclick="deleteCheckItem('${item.id}','${s.id}')">✕</button>
+                </div>`).join('')
+            : '<div class="no-items-hint">No items yet — add below.</div>'
+          }
+        </div>
+        <div class="add-item-row">
+          <input type="text" id="new-item-${s.id}" placeholder="Add item (e.g. Clean objectives)…" onkeydown="if(event.key==='Enter')addCheckItem('${s.id}')">
+          <button class="btn btn-sm" onclick="addCheckItem('${s.id}')">Add</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Scope CRUD ────────────────────────────────────────────────────────────────
+function showAddScope() { document.getElementById('add-scope-form').style.display = 'block'; document.getElementById('new-scope-name').focus(); }
+function hideAddScope() { document.getElementById('add-scope-form').style.display = 'none'; document.getElementById('new-scope-name').value = ''; document.getElementById('new-scope-room').value = ''; }
+
+async function addScope() {
+  const name = document.getElementById('new-scope-name').value.trim();
+  const room = document.getElementById('new-scope-room').value.trim();
+  if (!name) { showToast('Enter an instrument name'); return; }
+  const s = { id: 'sc-' + Date.now(), name, room: room || null };
+  await sb('cleaning_scopes', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify(s) });
+  scopes.push({ ...s, checkItems: [] });
+  scopes.sort((a, b) => a.name.localeCompare(b.name));
+  hideAddScope();
+  renderAdminPanel();
+  renderLogForm();
+  renderHistory();
+  showToast('Instrument added ✓');
+}
+
+async function deleteScope(id) {
+  if (!confirm('Remove this instrument and all its checklist items?')) return;
+  await sb(`scope_check_items?scope_id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
+  await sb(`cleaning_scopes?id=eq.${id}`,         { method: 'DELETE', prefer: 'return=minimal' });
+  scopes = scopes.filter(s => s.id !== id);
+  renderAdminPanel();
+  renderLogForm();
+  renderHistory();
+  showToast('Instrument removed');
+}
+
+// ── Check item CRUD ───────────────────────────────────────────────────────────
+async function addCheckItem(scopeId) {
+  const input = document.getElementById(`new-item-${scopeId}`);
+  const name  = input.value.trim();
+  if (!name) { showToast('Enter an item name'); return; }
+  const scope = scopes.find(s => s.id === scopeId);
+  const item  = { id: 'ci-' + Date.now(), scope_id: scopeId, name, sort_order: scope.checkItems.length };
+  await sb('scope_check_items', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify(item) });
+  scope.checkItems.push(item);
+  input.value = '';
+  renderAdminPanel();
+  renderLogForm();
+  showToast('Item added ✓');
+}
+
+async function deleteCheckItem(itemId, scopeId) {
+  await sb(`scope_check_items?id=eq.${itemId}`, { method: 'DELETE', prefer: 'return=minimal' });
+  const scope = scopes.find(s => s.id === scopeId);
+  if (scope) scope.checkItems = scope.checkItems.filter(i => i.id !== itemId);
+  renderAdminPanel();
+  renderLogForm();
+  showToast('Item removed');
+}
+
+// ── Tabs / Toast ──────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('section-' + tab).classList.add('active');
+  if (tab === 'history') renderHistory();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+init();
+</script>
+</body>
+</html>
